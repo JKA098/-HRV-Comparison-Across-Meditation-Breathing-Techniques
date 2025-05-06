@@ -1,0 +1,7 @@
+Metric,Group_State,W-Statistic,p-Value
+RMSSD,Chi_pre,0.7362,0.0057
+RMSSD,Chi_med,0.8149,0.0413
+SDNN,Chi_pre,0.9098,0.3524
+SDNN,Chi_med,0.9547,0.7586
+Mean_HR,Chi_pre,0.8863,0.2162
+Mean_HR,Chi_med,0.8596,0.119

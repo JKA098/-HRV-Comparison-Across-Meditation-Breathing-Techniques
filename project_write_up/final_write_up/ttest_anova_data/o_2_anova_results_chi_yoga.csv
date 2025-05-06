@@ -1,0 +1,4 @@
+Metric,f-Statistic,p-Value
+RMSSD,4.725,0.0141
+SDNN,13.274,3.4e-05
+Mean_HR,19.379,1e-06

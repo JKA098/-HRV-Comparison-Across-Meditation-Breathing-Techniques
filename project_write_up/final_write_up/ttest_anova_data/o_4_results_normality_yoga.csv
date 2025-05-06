@@ -1,0 +1,7 @@
+Metric,Group_state,W-Statistic,p-Value
+RMSSD,Yoga_pre,0.7934,0.0989
+RMSSD,Yoga_med,0.9118,0.4243
+SDNN,Yoga_pre,0.8753,0.3106
+SDNN,Yoga_med,0.9376,0.5179
+Mean_HR,Yoga_pre,0.8184,0.1593
+Mean_HR,Yoga_med,0.9884,0.7942

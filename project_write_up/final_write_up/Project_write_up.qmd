@@ -1,0 +1,521 @@
+---
+title: "COMPARING HRV ACROSS DIFFERENT MEDITATION & BREATHING TECHNIQUES"
+format:
+  pdf:
+    documentclass: ieee
+    number-sections: false
+    fontsize: 11pt
+    toc: false
+    linestretch: 1.15
+    keep-tex: true
+geometry: margin=1in
+---
+
+```{r}
+#| message: false
+#| warning: false
+#| include: false
+library(knitr)
+library(kableExtra)
+library(readr)
+
+```
+
+\vspace{1cm}
+
+\begin{center}
+\large \textbf{Author:}\\[0.25em]
+\textbf{Johan Kevin Agatare}\\
+\textbf{Patel Maitri Narendrakumar}\\
+\textbf{Patel Badal Kiritbhai}
+\end{center}
+
+\vspace{0.8cm}
+
+\begin{abstract}
+
+This project compared time-domain heart rate variability (HRV)  metrics—Mean heart rate (Mean-HR), Standard Deviation of NN intervals (SDNN), and Root Mean Square of Successive Differences (RMSSD); across various physiological states—sleep, different meditations, and breathing techniques. 
+
+The data was obtained from the PhysioNet database and was processed to extract heart rate and R-R interval data. Statistical analyses were conducted to explore and identify any differences between physiological states and to enhance understanding of the data. 
+
+Most t-test results revealed no statistically significant differences, but the ANOVA tests revealed significant differences for the metrics of all groups tested. 
+
+Afterward, machine learning models were trained using computed time-domain HRV metrics, which served as input features. Of the machine learning models tested, Logistic regression and SVM achieved the highest classification accuracy of 0.67. 
+
+This project further demonstrated that HRV metrics can be used to distinguish between different physiological states and offered insight for future research.
+
+\end{abstract}
+\renewcommand{\IEEEkeywordsname}{Keywords}
+\begin{IEEEkeywords}
+\scriptsize 
+Heart Rate Variability (HRV), time-domain metrics, states, statistical analysis, machine learning models, evaluation metrics, hyperparameter tuning, feature importance, autonomic nervous system, parasympathetic activity, preprocessing, RR intervals, visualization, Python, R, PhysioNet dataset
+\end{IEEEkeywords}
+
+
+# I. INTRODUCTION
+
+## Background and Significance
+
+\vspace{0.8em}
+
+The autonomic nervous system balance and response capabilities are evaluated through Heart Rate Variability (HRV) \[10\], which serves as a basic biological measurement method \[11,12\]. The measure demonstrates different heartbeat timing patterns, which research teams associate with emotional management, stress systems, and heart wellness. Science utilizes HRV more often to observe mindfulness effects as well as relaxation methods and mental wellness studies \[1\].
+
+People use meditation along with structured breathing techniques as well-known, non-invasive tools to enhance HRV values. In a sense, enhancing HRV values is a practice whereby human bodies achieve emotional equilibrium through these practices that allow both parasympathetic activation and sympathetic reduction, thus minimizing stress-related physiological responses. Research about meditative approaches and their effects on HRV shows insufficient study despite their common use, so scientists still need to figure out which method leads to the best results in cardiovascular and nervous.
+
+## Literature Survey
+
+\vspace{0.8em}
+
+Current research shows that stress exists as a statistically important factor related to HRV outcomes. Research by Kim et al. \[2\], through meta-analysis demonstrated that stress reduction interventions enhance HRV measurements because stress affects the autonomic nervous system's psychological regulation functions. Scientific research has evaluated the impact that both structured respiration methods and mindful breathing exercises have on oneself. The study conducted by Natarajan \[3\] revealed that HRV increased with breathing-focused meditation, which caused an improvement in vagal activity. Short, structured breathing exercises, according to Balban et al. \[4\], decreased stress levels and generated better emotional states in subjects.
+
+Studies about meditation primarily study individual approaches or analyze meditation relative to minimal restful states. The research field comprise extensive quantitative comparison of meditative and breathing techniques when assessing their impact on HRV through statistical evaluation.
+
+Still, current research does not offer proper implementation of machine learning techniques to analyze HRV data although such methods could enable the development of individualized stress management tools.
+
+## Research Objectives and Contributions
+
+\vspace{0.8em}
+
+This project aimed to address the detected research gaps by conducting a comparative analysis using four different states: **Meditation (both before and after), Fixed-rate breathing, and Sleep**.
+
+Specifically, the research :
+
+-   Evaluated Time-domain-HRV metrics\[13,14,15\]—Mean heart rate, SDNN and RMSSD, for each state.
+
+-   Analyzed HRV changes by applying ANOVA and t-tests to conduct statistical comparisons between the techniques.
+
+-   Established if the HRV changes resulting from meditation practices, controlled breathing or sleep produced patterns that can be differentiated from one another.
+
+-   Built machine learning models, such as KNN or Random Forest, to classify different physiological states through the analysis of HRV time domain features(metrics).
+
+This research used predictive models and statistical analysis to generate two key scientific benefits: a better empirical understanding of meditation impacts on physiology and the ability to develop systems that identify relaxation methods using HRV data patterns.
+
+Recent studies showed that heart rate signals during meditation were inherently non-linear and exhibit fractal and multifractal characteristics, requiring more sophisticated analysis methods than conventional time-domain or spectral analysis \[5,6\].
+
+Nasrolahzadeh et al. \[5\], and Bhaduri and Ghosh \[6\] demonstrated that techniques like **Visibility Graphs** and **MF-DFA** can detect hidden changes in HRV structure during meditation but did not explore statistical comparisons across techniques or simpler predictive models.
+
+Looking at studies that used the same dataset and have integrated machine learning approaches such as **LSTM** \[7\] or others, with different datasets that used machine learning techniques such as **KNN, SVM, K-means clustering** and **SVC**\[8,9\] , this project expands upon previous works by comparing the HRV effects of multiple meditation and breathing techniques using interpretable features and classification methods suitable for real-world applications.
+
+# II. METHODS
+
+## Data description
+
+\vspace{0.8em}
+
+This project utilized the "*Heart Rate Oscillations during Meditation*" dataset from PhysioNet\[6\]. This dataset contained heart rate time-series data from five groups:
+
+-   **Chi meditation group** (C1–C8): This group had HRV recordings of participants' Pre-meditation and Meditation data (around one hour each).
+
+-   **Kundalini Yoga meditation group** (Y1–Y4): which had HRV recordings of Pre-meditation and Meditation of participants HRV data (17–47 minutes each).
+
+-   **Spontaneous breathing group**(normal group) (N1–N11): This group recorded participants' HRVs while sleeping (about 6 hours each).
+
+-   **Metronomic breathing group** (M1–M14): This group had HRV recordings while participants were breathing at a fixed rate (0.25 Hz) for 10 minutes in a supine position.
+
+-   **Ironman group** (I1-I9): This group had HRV recordings of Elite athletes while they were sleeping hours before the Ironman Triathlon
+
+Each dataset consisted of time in seconds and instantaneous heart rate—both normal heart rate in beats per minute and R-R interval recordings.
+
+## Method description
+
+\vspace{0.8em}
+
+The following time-domain-HRV metrics\[13,14,15\] were used:
+
+-   **Mean Heart Rate (Mean-HR)** – which measures the overall cardiovascular response/activity and is easily computed.
+
+-   **Standard Deviation of NN intervals (SDNN)** – which measures overall changes in R-R intervals \[17\] and needs to be computed.
+
+-   **Root Mean Square of Successive Differences (RMSSD)** – which is an indicator of parasympathetic nervous system activity \[17\], uses R-R intervals data and is almost like **SDNN**, except that it is a bit more sensitive to short-term variations in heart rate and more directly reflects vagal (parasympathetic) activity\[18,10\].
+
+## Analysis Steps
+
+\vspace{0.8em}
+
+1.  First HRV metrics(both normal heart rate and R-R intervals) were extracted for each group(**Chi, Yoga, Normal sleep, Ironman group, Metronomic breathing**). Later, normal **heart rate and R-R interval** data for each group were merged into one dataset for heart rate data(for each group) and one dataset for R-R intervals(for each group). Resulting in a total of **10** datasets( **5** heart rate datasets and 5 R-R intervals dataset). For detailed summary of how the data was processed, and transformed refer to: *Chi_C1_Data_Preprocessing_Summary.docx, Chi_C1_RR_Interval_Summary.docx, and Chi_Final_Merged_Datasets_Summary.docx*.
+
+2.  Second, afterward, **Mean-HR, SDNN, and RMSSD** were computed for all groups and later on, merged together into one data set containing all the HRV metrics(Mean-HR, SDNN, and RMSSD) for all groups("*o_1_all_hrv_rr_metric_combined*").\
+
+3.  For easy comparison, all groups that featured common practices were grouped together:
+
+    -   *`Chi meditation`* and *`Yoga meditation`* were grouped together under *`Pre-meditation`* and *`Meditationstate(condition)`*.
+
+    -   The *`Spontaneous breathing group`* and the *`Ironman group`* that practiced normal breathing while *`sleeping`* were grouped under the *`sleep`* state.
+
+    -   The *`Metronomic breathing group`* was under *`Fixed-rate breathing`* state.
+
+4.  HRV data of **Chi** group and **Yoga** group were evaluated using **Shapiro-Wilk tests** which assess data **normality**. After that the changes in Pre-meditation vs. Meditation were evaluated using a **'paired t-test'**.
+
+5.  HRV changes in **Meditation** vs. **sleep** vs. **fixed-rate breathing** were evaluated using '**one-way ANOVA**'.
+
+6.  Multiple machine learning models were trained to classify(differentiate) between states based on HRV features(metrics). The chosen models were ***K-Nearest Neighbors (KNN), Random Forest, Logistic regression, Support vector machine(SVM), and Gradient boosting classifier***
+
+Finally, the evaluation metrics used were **Accuracy**, **Confusion Matrix**, **F1-score** and **GridSearchCV** was used for **hyperparameters tuning**.
+
+### Tools
+
+\vspace{0.8em}
+
+The programming Language used was **Python** alongside the following libraries: `Pandas, NumPy, SciPy (Statistical Analysis), Matplotlib & Seaborn (Visualization), Scikit-learn (Machine Learning), WFDB (PhysioNet data processing)`. For development **Jupyter Lab** was used and for visualization and rendering **R studio**.
+
+# III. RESULTS
+
+This section presents the outcomes of statistical analysis and machine learning models. Statistical analysis was conducted in order to assess HRV differences across states(conditions) and groups using time-domain metrics. Machine learning classification was performed in order to classify physiological states based on the same HRV time-domain metrics. And the following table shows how the final dataset after preprocessing and transformation(see table I).
+
+```{r}
+#| message: false
+#| warning: false
+#| echo: false
+#| results: asis
+#| label: sample-hrv-metrics
+
+# reference for knowing how to use kable[63]
+
+df <- read_csv("ttest_anova_data/o_1_all_hrv_rr_metric_combined.csv")
+df_head <- head(df, 10)
+
+kable(df_head, 
+      format = "latex",
+      digits = 4, 
+      booktabs = TRUE,
+      caption = "Sample HRV metrics: First 10") %>%
+  kable_styling(latex_options = c("hold_position", "scale_down"), position = "center")
+
+
+
+```
+
+## Normality results: Chi and Yoga group.
+
+\vspace{0.8em}
+
+```{r}
+#| message: false
+#| warning: false
+#| echo: false
+#| results: asis
+#| label: normality-results-chi
+
+df_norm_chi <- read_csv("ttest_anova_data/o_3_results_normality_chi.csv")
+
+kable(df_norm_chi, 
+      format = "latex",
+      digits = 4, 
+      booktabs = TRUE,
+      caption = "Normality results for the Chi group") %>%
+  kable_styling(latex_options = c("hold_position", "scale_down"), position = "center")
+
+```
+
+**Shapiro-Wilk** tests were conducted to assess data normality within the **Chi** and **Yoga** groups. The results revealed that for the **Chi** group, **RMSSD** was not normally distributed in either **pre-meditation** or **meditation** states(**p = 0.0057 and p = 0.0413**). **SDNN** and **Mean-HR** followed a normal distribution for both states(pre-meditation or meditation). For the **Yoga** group, all HRV metrics for both states(pre-meditation or meditation) passed the normality check with a **p-value** \> **0.05**(see table II, III).
+
+```{r}
+#| message: false
+#| warning: false
+#| echo: false
+#| results: asis
+#| label: normality-results-yoga
+
+df_norm_yoga <- read_csv("ttest_anova_data/o_4_results_normality_yoga.csv")
+
+kable(df_norm_yoga, 
+      format = "latex",
+      digits = 4, 
+      booktabs = TRUE,
+      caption = "Normality results for the Yoga group") %>%
+  kable_styling(latex_options = c("hold_position", "scale_down"), position = "center")
+
+```
+
+## Paired t-test results: Chi and Yoga meditation groups.
+
+\vspace{0.8em}
+
+**Paired t-tests** were performed to compare HRV metrics before and during Meditation for the **Chi and Yoga** groups. For the **Chi** group, none of the metrics showed a **statistically significant change**. On the other hand, the **Yoga** group showed a statistically significant change in **Mean-HR, but RMSDD** and **SDNN** did not show any(see table IV).
+
+```{r}
+#| message: false
+#| warning: false
+#| echo: false
+#| results: asis
+#| label: ttest-metrics
+
+df_ttest <- read_csv("ttest_anova_data/o_5_t_test_results_chi_yoga.csv")
+
+kable(df_ttest, 
+      format = "latex",
+      digits = 4, 
+      booktabs = TRUE,
+      caption = "T-Test results for Chi and Yoga") %>%
+  kable_styling(latex_options = c("hold_position", "scale_down"), position = "center")
+
+```
+
+## ANOVA results.
+
+\vspace{0.8em}
+
+A **one-way ANOVA** was performed to determine if there were any significant differences in HRV metrics across the experimental groups. The results of the ANOVA testing showed that all HRV metrics showed a significant difference(**p\<0.05**)(see table V).
+
+```{r}
+#| message: false
+#| warning: false
+#| echo: false
+#| results: asis
+#| label: anova-metrics
+
+df_anova <- read_csv("ttest_anova_data/o_2_anova_results_chi_yoga.csv")
+
+kable(df_anova, 
+      format = "latex",
+      digits = 4, 
+      booktabs = TRUE,
+      caption = "ANOVA results") %>%
+  kable_styling(latex_options = c("hold_position", "scale_down"), position = "center")
+
+```
+
+## Model performance.
+
+\vspace{0.8em}
+
+The following is a summary of the performances of the different machine learning models used(see table VI). **Logistic regression** and **Support vector machine**(SVM) had the **highest accuracy** and **F1-score**.
+
+```{r}
+#| message: false
+#| warning: false
+#| echo: false
+#| results: asis
+#| label: ml-results
+
+df_results_ml <- data.frame(
+  Model = c(
+    "KNN (Before Tuning)",
+    "KNN (After Tuning)",
+    "Random Forest",
+    "Random Forest (Tuned)",
+    "Logistic Regression",
+    "Support Vector Machine",
+    "Gradient Boosting"
+  ),
+  Accuracy = c(0.50, 0.50, 0.58, 0.58, 0.67, 0.67, 0.50),
+  F1_Score = c(0.50, 0.50, 0.59, 0.59, 0.67, 0.68, 0.49)
+)
+
+kable(df_results_ml,
+      format = "latex",
+      digits = 2,
+      booktabs = TRUE,
+      col.names = c("Model", "Accuracy", "F1-score"),
+      caption = "Machine learning model results") %>%
+  kable_styling(latex_options = c("hold_position", "scale_down"), position = "center")
+
+```
+
+## Line plot for KNN.
+
+\vspace{0.8em}
+
+The following plot showed all the different values of ‘**k**’( **number of neighbors**) on the **x-axis** ranging from 1 to 20, and the **y-axis** showed the **accuracy**. The purpose of this plot was to determine which optimal value of k would yield the best accuracy rather than selecting an arbitrary value that might underperform(see figure 1).
+
+![Accuracy vs Number of Neighbors](picture_use_ml/1_Accuracy_for_KNN.png){#knn_accuracy_number fig-align="left"}
+
+## Confusion matrix for KNN.
+
+\vspace{0.8em}
+
+This confusion matrix displays the actual versus predicted class for the **KNN** model. Diagonal values indicate **accurate predictions**, and non-diagonal values indicate **misclassifications**. **Fixed-rate breathing** and **Sleeping** showed better classification **accuracy**, unlike Pre-**meditation** and **Meditation**(see figure 2).
+
+![KNN confusion matrix](picture_use_ml/2_Confusion_Matrix_for_KNN.png){#knn_confusion_matrix fig-align="left"}
+
+And the same pattern was observed after **hyperparameter tunning**(see figure 3), indicating that the tunning did not have much of an effect.
+
+![KNN confusion matrix: with tunning](picture_use_ml/3_KNN%20Confusion%20Matrix_Before%20vs%20After%20Tuning.png){#knn_before_after_confusion_matrix fig-align="left"}
+
+## Boxplots of HRV metrics by condition.
+
+\vspace{0.8em}
+
+The computed **boxplots** showed the distributions of **SDNN, RMSDD, and Mean-HR** across all conditions. These visualizations allow us to observe whether the selected features display any variabilities that distinguish them from one another. For instance, **Mean-HR** was the highest during **Meditation**, and **Fixed-rate breathing** had low **SDNN** and **RMSSD**(see figure 4, 5, 6).
+
+![Boxplot for SDNN distribution](picture_use_ml/4_Boxplots%20of%20HRV%20Metrics%20by%20Condition_SDNN.png){#boxplot_condition_sdnn fig-align="left"}
+
+![Boxplot for RMSDD](picture_use_ml/5_Boxplots%20of%20HRV%20Metrics%20by%20Condition_RMSDD.png){#boxplot_condition_rmssd fig-align="left"}
+
+![Boxplot for Mean-HR distribution](picture_use_ml/6_Boxplots%20of%20HRV%20Metrics%20by%20Condition_Mean_Hr.png){#boxplot_condition_mean_hr fig-align="left"}
+
+## PCA projection of HRV features.
+
+\vspace{0.8em}
+
+**PCA projection** helped visualize how well the different conditions clustered compared to one another. While there was some overlapping, there was a relatively noticeable separation between Sleeping and fixed-rate breathing(see figure 7).
+
+![PCA projection](picture_use_ml/7_PCA%20Projection%20of%20HRV%20Features.png){#pca_projection fig-align="left"}
+
+## Confusion matrix: Random forest.
+
+\vspace{0.8em}
+
+The confusion matrix for **random forest** showed better classification performance compared to **KNN**. Still, some misclassifications also occurred, further confirming the possibility of overlap in the HRV features between certain physiological states(see figure 8).
+
+![Random forest confusion matrix](picture_use_ml/8_Confusion%20Matrix_%20Random%20Forest.png){#rf_confusion_matrix fig-align="left"}
+
+In addition, the following confusion matrix(see figure 9) gives a comparison, showing the improvements of **Random forest over KNN**. And allows us to see that Random forest appears to be able to classify **Meditation** and **Pre-meditation** better than **KNN** does.
+
+![KNN vs RF confusion matrix](picture_use_ml/10_Confusion%20Matrices_KNN%20vs%20Random%20Forest.png){#knn_rf_confusion_matrix fig-align="left"}
+
+## Feature importance: Random forest.
+
+\vspace{0.8em}
+
+This bar chart showed the rankings of the different features and helped in determining which ones were the most important—i.e., had the most predictive power. **Mean-HR** and **SDNN** were the most important, followed by **RMSSD**(see figure 10).
+
+![Feature importance](picture_use_ml/9_Feature%20Importance_Random%20Forest.png){#feature_importance fig-align="left"}
+
+## Confusion matrices: Logistic regression, SVM, Gradient boosting.
+
+\vspace{0.8em}
+
+These matrices give a comparison of the performance of three additional models that were used. **Logistic regression** and **SVM** showed a **better classification accuracy** and were able to identify most of the states. On the other hand, **Gradient boosting** seemed to have struggled and misclassified multiple states(see figure 11).
+
+![Confusion matrices](picture_use_ml/11_Confusion_Matrices_%20Logistic_Regressio_SVM_Gradient_Boosting.png){#confusion_matrices_multiple fig-align="left"}
+
+# IV. DISCUSSION
+
+The main objective of this project was to evaluate and compare the effects of different meditation techniques, breathing techniques, and sleep on **Heart Rate Variability(**HRV**)**—a recognized indicator of autonomic nervous activity, and to determine if a machine learning model would accurately distinguish between physiological states computed using time-domain metrics (**SDNN, RMSSD, Mean-HR**).
+
+The dataset used contained data for five different experimental groups for which **Heart rate**( in beats/min) and **R-R** intervals were recorded. The groups had different recording times. Some had 10 minutes of recordings, whereas others had up to 4 hours of HR and R-R recordings.
+
+The findings from both statistical testing and predictive modeling are discussed below.
+
+## Normality Test
+
+\vspace{0.8em}
+
+The **normality test** was conducted to evaluate whether or not the data was normally distributed and was performed before the paired t-test. In this case, normality helps assess the data distribution, so as to have an idea of what to expect. If the **p-value \< 0.005**, the data is **not normally** distributed. And, if the **p-value \> 0.005**, the data is **normally** distributed.
+
+The results revealed that **RMSSD** was not normally distributed in the **Chi** group for both conditions(**pre-meditation and meditation**). However, **SDNN and Mean-HR** passed the normality check.
+
+On the other hand, all HRV metrics for the Yoga group were normally distributed(**p \> 0.05)**. The statistical testing proceeded with paired t-test calculations.
+
+Although **RMSSD** did not meet the normality check, the **t-test** was conducted regardless because the goal was to determine if there were meaningful changes between the pre-meditation and meditation conditions.
+
+## T-Test Results
+
+\vspace{0.8em}
+
+For this project, a **paired t-test** was conducted for the **Chi** and **Kundalini Yoga** meditation groups. The goal was to determine if, in fact, the meditation sessions resulted in a meaningful changes in HRV compared to the pre-meditation baseline.
+
+Establishing such differences would potentially help set expectations for the subsequent performance of machine learning models tasked with distinguishing between physiological states. The metrics of choice used for testing were **RMSDD, SDNN, and Mean-HR**.
+
+The **paired t-test** revealed no statistically significant changes in **RMSDD, SDNN, or Mean-HR** between **pre-meditation and meditation** states in the **Chi** group.
+
+While **SDNN** was closer to the significance threshold(**p = 0.0795**), it was still higher. The lack of significant changes across all used metrics suggested that **Chi** meditation may not induce any HRV changes significant enough to be detected by time-domain measurements.
+
+On the other hand, the **Kundalini Yoga** group showed an overall reduction in **Mean-HR** during meditation(**p = 0.0250**), which was **statistically significant**. And indicates the potential calming effect(stress-reduction effect) of meditation on cardiac function. This supports prior findings that argue that meditation can activate parasympathetic activity and reduce heart rate. However, in **SDNN**(p = 0.9847) or **RMSSD**(p = 0.7282) for **Kundalini Yoga**, no **statistically significant changes** were observed, suggesting that, although a reduction in **Mean-HR** was observed, the changes were not consistent across all metrics used, raising questions about the extent to which these effects can be generalized.
+
+Based on the results of the paired t-test, in most cases there were no meaningful changes after meditation, suggesting that **either better or more sensitive metrics** should be used or that the physiological effects of meditation might not be easily captured by **time-domain** **metrics**.
+
+## ANOVA Results
+
+\vspace{0.8em}
+
+A **One-way ANOVA** test was also performed. Unlike the t-test, the ANOVA test sought to answer whether the **HRV metrics**(RMSSD, SDNN, Mean-HR) differ significantly across multiple physiological states –**Sleep, Breathing, or Meditation state**. This analysis would be helpful, as it could provide insight into the degree of separation that exists between the different states(conditions).
+
+The results showed that there was a significant difference across all groups for all three HRV metrics**(p\<0.05**). **Mean-HR** had the strongest statistical effect(F = 19.379, p \< 0.0001), followed by **SDNN** (F = 13.274, p \< 0.0001), and **RMSSD** (F = 4.725, p = 0.0141). **These findings indicated that HRV patterns differed significantly between the groups, enough that the difference could be captured by One-way ANOVA testing.**
+
+The relatively large **F-values** for **Mean-HR** and **SDNN** suggest substantial **variation** from one physiological state to another, indicating their potential usefulness as features for classification purposes with machine learning models.
+
+At this point, the next step for One-way ANOVA testing will be to perform a **post-hoc test** with **Tukey’s HSD**. This is because when ANOVA returns a result that is significant**(p \< 0.05**), it implies the existence of a difference between the groups, and it is followed up with post hoc tests to discover which groups differ from one another and how much they differ.
+
+However, in this case, finding out which group differs from one another, will be useful for classification, which is what the machine learning will be working on. As such, there is no need to perform the **post-hoc** test since the models will act as more or less **post-hoc discriminators**. In this case, ANOVA testing confirms **feature relevance**, and **classification models** will discriminate between the states.
+
+## Model Performance and Implications
+
+\vspace{0.8em}
+
+For this project, five models were used: **K-nearest neighbors (KNN), Random Forest, Logistic Regression, Support Vector Machine (SVM), and Gradient Boosting Classifier(GBC)**. Of the models assessed, **Logistic regression and Support Vector Machine** performed the best, with an accuracy of **0.67**( for both ) and an **F1 score** of **0.67 and 0.68**, respectively.
+
+These results suggest that even with simple features, it is possible for the machine learning models to distinguish between **meditation, sleep, and breathing states** with moderate accuracy. However, the effectiveness of linear models like **Logistic regression** over complex ones like **Random forest**, in this context, might shed light on the underlying structure of the **HRV** data, which was found to form distinct cluster when visualized through PCA.
+
+Specifically, the **PCA** visualization was used to assess whether the HRV features were distinct from one another. It showed **clustering** for **Sleeping and Fixed-Rate breathing** groups. And overlaps in the Meditation and Pre-Meditation groups, which did not come as a surprise as the **normality test** performed prior, indicated that the data was not normally distributed, and the **t-test** that did not show any significance—**further strengthening the notion that there were not enough differences between the time-domain metrics of these two states**(Meditation and Pre-Meditation).
+
+In contrast, **Random forest** and **KNN** achieved an accuracy of **0.58 and 0.50**, respectively—even after tuning, followed by **Gradient boosting** at 0.50 as well. **Random forest** and **KNN** achieved an **F1 score** **of 0.59 and 0.50**, respectively, followed by **Gradient boosting** with the lowest **F1 score of 0.49**, despite its complexity.
+
+Although **Random forest** performed better than **KNN**, it still underperformed when compared to **SVM** and **logistic regression**. Furthermore, rankings of **feature importance** from the **random forest** model indicated that **Mean-HR and SDNN**, probably contributed the most to prediction **accuracy**, which aligns with existing literature that identified these metrics as good indicators of physiological state.
+
+The **low performance of KNN** might be attributed to the limited number of **features** and potentially the **overlapping** distributions of HRV metrics across classes(HRV metrics), as shown by the boxplots, which in turn could be responsible for the model’s inability to clearly distinguish between the different conditions(physiological states).
+
+In this instance, the computed **boxplot** showed some trends, like elevated **Mean-HR** during **meditation**, but offered evidence that suggests the metrics used might not be enough for accurate classification. However, consistent patterns were observed, which helped justify their inclusion.
+
+The comparison between the selected models further emphasized the importance of model complexity versus data characteristics. It also confirmed that though **time-domain HRV** features can be used for modeling physiological states, they may require additional features to improve accuracy.
+
+Furthermore, the confusion matrix also showed that although **Random Forest and SVM** could accurately classify **Sleeping** and **Meditation** states, **Pre-Meditation** and **Fixed-rate breathing states** were more commonly misclassified, especially by **KNN** and **Gradient boosting**. This further suggests that the physiological states produced HRV patterns that overlapped, making accurate classification challenging.
+
+## Why Simpler Models Performed Better
+
+\vspace{0.8em}
+
+As evidenced by the performance table, simple models like **logistic regression** performed better than complex ones like **Gradient boosting**.
+
+This could be due to the **small set of features** and a **dataset that was not large enough**. In addition, **feature importance** from random forest showed that **Mean-HR and SDNN** were the most important variables, reinforcing the findings from ANOVA results. RMSDD, on the other hand, did not show the same degree of predictive power, although not far behind from the other features.
+
+# V. CONCLUSION
+
+All in all, the results of this study demonstrated that **Heart rate variability(HRV) metric**—**SDNN, RMSDD**, and **Mean-HR**; can capture useful distinctions between **sleeping, meditative, and breathing states**, which can be used for **classification and comparison** purposes, thereby supporting previous literature that used HRV as a useful marker of autonomic activity. Both statistical testing(**t-tests, ANOVA**) and machine learning models highlighted the discriminative power of time domain metrics— particularly for **Mean-HR** and **SDNN**.
+
+In addition, the good performance of **SVM** and **Logistic regression** suggests that even simple physiological data can be used to build predictive models, rendering the feasibility of automated physiological state detection, possible.
+
+Furthermore, these findings confirm that a combination of statistical analysis and machine learning can enable both understanding and classification of physiological states using simple heart rate data.
+
+And from a practical standpoint, this opens the door for real-time applications in wearable devices that could be used for monitoring sleep, breathing, or meditation.
+
+Future studies could seek to enhance model performance by including additional features (e.g., **frequency-domain or non-linear HRV metrics**), **increasing sample sizes**, or using **deep learning** methods to extract raw RR intervals.
+
+## Limitations
+
+\vspace{0.8em}
+
+Although initially, the data was relatively large, preprocessing and transformation reduced its size significantly and possibly introduced class(variable) imbalance, which may have limited its generalizability.
+
+Furthermore, although time-domain metrics(features) have proven useful and easy to interpret, they may fail to accurately capture and distinguish the complex and different patterns of autonomic nervous system activity.
+
+And even though moderate classification accuracy was obtained, the persistent rate of misclassification suggests that better models or features should be used.
+
+Lastly, the inclusion of the “Pre-meditation” state/condition, could have potentially increased the misclassification rate since its physiological features likely overlap with meditative and resting(sleeping or fixed breathing) states.
+
+\newpage
+
+# VI.References
+
+\[1\] R. Tiwari et al., "Analysis of Heart Rate Variability and Implication of Different Factors on Heart Rate Variability," Curr. Cardiol. Rev., vol. 17, no. 5, Oct. 2021. \[Online\]. Available: <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8950456/>
+
+\[2\] H.-G. Kim et al., "Stress and Heart Rate Variability: A Meta-Analysis and Review," Psychiatry Investig., vol. 15, no. 3, pp. 235–245, Mar. 2018. \[Online\]. Available: <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5900369/>
+
+\[3\] A. Natarajan, "Heart rate variability during mindful breathing meditation," Front. Physiol., vol. 13, 2023. \[Online\]. Available: <https://www.frontiersin.org/articles/10.3389/fphys.2022.1017350/full>
+
+\[4\] M. Y. Balban et al., "Brief structured respiration practices enhance mood and reduce physiological arousal," Cell Rep. Med., vol. 4, no. 1, Jan. 2023. \[Online\]. Available: <https://www.cell.com/cell-reports-medicine/fulltext/S2666-3791(22)00474-8>
+
+\[5\] M. Nasrolahzadeh et al., "A novel method for distinction heart rate variability during meditation using LSTM recurrent neural networks based on visibility graph," Biomed. Signal Process. Control, vol. 90, 2024. \[Online\]. Available: <https://doi.org/10.1016/j.bspc.2023.105822> \[6\] A. Bhaduri and D. Ghosh, "Quantitative Assessment of Heart Rate Dynamics during Meditation," Front. Physiol., vol. 7, Feb. 2016. \[Online\]. Available: <https://www.frontiersin.org/articles/10.3389/fphys.2016.00044/full>
+
+\[7\] Mahda Nasrolahzadeh, Zeynab Mohammadpoory, and Javad Haddadnia, “A novel method for distinction heart rate variability during meditation using LSTM recurrent neural networks based on visibility graph,” Biomedical Signal Processing and Control, vol. 90, pp. 105822–105822, Dec. 2023, doi: <https://doi.org/10.1016/j.bspc.2023.105822.>
+
+\[8\] A. Matuz, van, Gergely Darnai, and Árpád Csathó, “Generalisable machine learning models trained on heart rate variability data to predict mental fatigue,” Scientific reports, vol. 12, no. 1, Nov. 2022, doi: <https://doi.org/10.1038/s41598-022-24415-y.>
+
+\[9\] I. B. Messaoud and Ornwipa Thamsuwan, “Heart Rate Variability-Based Stress Detection and Fall Risk Monitoring During Daily Activities: A Machine Learning Approach,” Computers, vol. 14, no. 2, pp. 45–45, Jan. 2025, doi: <https://doi.org/10.3390/computers14020045.>
+
+\[10\] R. Tiwari, R. Kumar, S. Malik, T. Raj, and P. Kumar, “Analysis of Heart Rate Variability and Implication of Different Factors on Heart Rate Variability,” Current Cardiology Reviews, vol. 17, no. 5, Oct. 2021, doi: <https://doi.org/10.2174/1573403x16999201231203854.>
+
+\[11\] H.-G. Kim, E.-J. Cheon, D.-S. Bai, Y. H. Lee, and B.-H. Koo, “Stress and Heart Rate Variability: A Meta-Analysis and Review of the Literature,” Psychiatry Investigation, vol. 15, no. 3, pp. 235–245, Mar. 2018, doi: <https://doi.org/10.30773/pi.2017.08.17.>
+
+\[12\] “Vancouver Autonomic Nervous System Assessment \| Stress & Heart Health,” R·MEDYMD Health, Feb. 26, 2025. <https://rmedymd.com/autonomic-nervous-system-stress-analysis/> (accessed Mar. 12, 2025). \[13\] F. Shaffer and J. P. Ginsberg, “An Overview of Heart Rate Variability Metrics and Norms,” Frontiers in Public Health, vol. 5, no. 258, Sep. 2017, doi: <https://doi.org/10.3389/fpubh.2017.00258.>
+
+\[14\] Administrator, “The Importance of Time-Domain HRV Analysis in Cardiac Health Prediction,” SeriesScience International \| Open Access Journals \| Peer Reviewed Articles, Nov. 19, 2022. <https://seriesscience.com/hrv-analysis-in-cardiac-health-prediction/>
+
+\[15\] S.-A. Cha et al., “Time- and frequency-domain measures of heart rate variability predict cardiovascular outcome in patients with type 2 diabetes,” Diabetes Research and Clinical Practice, vol. 143, pp. 159–169, Sep. 2018, doi: <https://doi.org/10.1016/j.diabres.2018.07.001.>
+
+\[16\] ‌“Manuscript Templates for Conference Proceedings,” @IEEEorg, 2020. <https://www.ieee.org/conferences/publishing/templates.html>
+
+\[17\] ‌“Understanding HRV Metrics: A Deep Dive into SDNN and RMSSD - Spike API,” Spike API, Jul. 22, 2024. <https://spikeapi.com/understanding-hrv-metrics-a-deep-dive-into-sdnn-and-rmssd/> (accessed Mar. 12, 2025).
+
+\[18\] F. Shaffer and J. P. Ginsberg, “An Overview of Heart Rate Variability Metrics and Norms,” Frontiers in Public Health, vol. 5, no. 258, Sep. 2017, doi: <https://doi.org/10.3389/fpubh.2017.00258.> ‌ \[19\] R. E. Kleiger, P. K. Stein, and J. T. Bigger, “Heart Rate Variability: Measurement and Clinical Utility,” Annals of Noninvasive Electrocardiology, vol. 10, no. 1, pp. 88–101, Jan. 2005, doi: <https://doi.org/10.1111/j.1542-474x.2005.10101.x.>
